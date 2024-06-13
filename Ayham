@@ -1,0 +1,313 @@
+import java.util.*;
+
+class City {
+    String name;
+    int numberOfHotels;
+    Hotel[] hotels = new Hotel[6];
+}
+
+class Hotel {
+    String name;
+    int numberOfServices;
+    int numberOfPersons;
+    Service[] services = new Service[7];
+}
+
+class Service {
+    String name;
+    int price;
+}
+
+class Reservation {
+    String hotelName;
+    String[] serviceNames = new String[10];
+    int[] quantities = new int[10];
+    int[] servicePrices = new int[10];
+    int[] numberOfPersons = new int[10];
+    int currentServiceIndex;
+}
+
+public class Main {
+    public static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        City[] cities = new City[22];
+        Reservation reservation = new Reservation();
+        
+        System.out.println("____اهلاً بك في موقع حجز الفنادق في اليمن");
+        System.out.println("ادخل رقم _1 للحجز في الموقع\nادخل رقم _2 للمعلومات عن الموقع\nادخل رقم _3 للخروج من الموقع");
+        int choice = scanner.nextInt();
+
+        switch (choice) {
+            case 1:
+                City[] initializedCities = initializeCities(cities);
+                makeReservation(initializedCities, reservation);
+                break;
+            case 2:
+                System.out.println("هذا الموقع يعمل على حجز الفنادق في جميع المحافظات اليمنية");
+                break;
+            case 3:
+                break;
+            default:
+                System.out.println("ادخالك غير صحيح، أعد الإدخال");
+        }
+    }
+
+    public static City[] initializeCities(City[] cities) {
+        String[] cityNames = {"تعز", "عدن", "صنعاء", "مارب", "الحديدة", "اب", "ذمار", "ابين", "عمران", "صعده", "المحويت", "حضرموت", "الجوف", "سقطره", "الضالع", "يريم", "رايمة", "البيضاء", "لحج", "حجة", "المهرة", "شبوه"};
+        int[] basePrices = {3500, 4500, 3550, 4000, 5000, 6000, 1600, 2500, 500, 600, 2000, 2500, 2000, 4000, 1500, 700, 200, 2000, 1700, 2100, 2500, 3000};
+        int[] numberOfHotels = {5, 6, 4, 5, 4, 6, 3, 3, 4, 2, 2, 6, 3, 6, 2, 3, 2, 3, 2, 4, 6, 5};
+        String[] hotelNames = {"", "سوفتيل", "ماريوستي", "ماريوت_تعز", "السعيد", "الامتياز"};
+        int[] numberOfServices = {4, 5, 3, 4, 3, 5};
+        String[] serviceNames = {"غرف", "جناح", "قاعة اجتماعات", "مطعم", "استراحة"};
+        int[] servicePrices = {7000, 10000, 40000, 0, 3000};
+
+        for (int i = 0; i < cityNames.length; i++) {
+            cities[i] = new City();
+            cities[i].name = cityNames[i];
+            cities[i].numberOfHotels = numberOfHotels[i];
+
+            for (int j = 0; j < cities[i].numberOfHotels; j++) {
+                cities[i].hotels[j] = new Hotel();
+                if (j == 0) {
+                    cities[i].hotels[j].name = cityNames[i];
+                } else {
+                    cities[i].hotels[j].name = hotelNames[j];
+                }
+
+                cities[i].hotels[j].numberOfPersons = 14 - j * 2;
+                cities[i].hotels[j].numberOfServices = numberOfServices[j];
+
+                for (int k = 0; k < cities[i].hotels[j].numberOfServices; k++) {
+                    cities[i].hotels[j].services[k] = new Service();
+                    cities[i].hotels[j].services[k].name = serviceNames[k];
+                    cities[i].hotels[j].services[k].price = servicePrices[k] + basePrices[i];
+                }
+            }
+        }
+
+        return cities;
+    }
+
+    public static void makeReservation(City[] cities, Reservation reservation) {
+        System.out.println("ادخل وجهتك");
+        String destination = scanner.next();
+        clearScreen();
+
+        for (City city : cities) {
+            if (city.name.equals(destination)) {
+                System.out.println("المدينة  :" + city.name);
+                System.out.println("الفنادق المتوفرة لدينا:");
+                for (Hotel hotel : city.hotels) {
+                    if (hotel != null) {
+                        System.out.println("فندق: " + hotel.name);
+                    }
+                }
+
+                System.out.println("ادخل اسم الفندق");
+                reservation.hotelName = scanner.next();
+                clearScreen();
+
+                for (Hotel hotel : city.hotels) {
+                    if (hotel != null && reservation.hotelName.equals(hotel.name)) {
+                        int action = 0;
+                        do {
+                            System.out.println("الخدمات المتوفرة في فندق " + hotel.name);
+                            System.out.println("اسم الخدمات\t سعر الخدمات");
+                            for (int j = 0; j < hotel.numberOfServices; j++) {
+                                if (j < 2) {
+                                    System.out.println(hotel.services[j].name + "\t" + hotel.services[j].price);
+                                } else {
+                                    if (j == 2) {
+                                        System.out.println("الخدمات الاخرى:");
+                                    }
+                                    System.out.println(hotel.services[j].name + "\t" + hotel.services[j].price);
+                                }
+                            }
+                            System.out.println("__ادخل__\n1_لحجز غرفة او جناح\t2_لحجز خدمات اخرى\t3_للانتقال الى الصفحة التالية");
+                            int choice = scanner.nextInt();
+                            action = reservation.currentServiceIndex++;
+                            switch (choice) {
+                                case 1:
+                                    reservation.serviceNames[action] = scanner.next();
+                                    clearScreen();
+                                    reservation = reserveRoomOrSuite(reservation, cities, action, city, hotel);
+                                    break;
+                                case 2:
+                                    reservation.serviceNames[action] = scanner.next();
+                                    clearScreen();
+                                    reservation = reserveOtherService(reservation, cities, action, city, hotel);
+                                    clearScreen();
+                                    break;
+                                case 3:
+                                    action = 10;
+                                    break;
+                            }
+                        } while (action < 10);
+
+                        if (reservation.currentServiceIndex > 1) {
+                            int d = 0;
+                            do {
+                                System.out.println("1_للالغاء\t2_لتأكيد والدفع\tاي رقم للخروج");
+                                int ch = scanner.nextInt();
+                                switch (ch) {
+                                    case 1:
+                                        reservation = cancelReservation(reservation, reservation.currentServiceIndex);
+                                        clearScreen();
+                                        break;
+                                    case 2:
+                                        pay(reservation, reservation.currentServiceIndex);
+                                        d = 5;
+                                        break;
+                                    default:
+                                        d = 5;
+                                        System.out.println("خروج");
+                                }
+                                d++;
+                            } while (d < 5);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static Reservation reserveRoomOrSuite(Reservation reservation, City[] cities, int action, City city, Hotel hotel) {
+        int input = 0;
+
+        for (int j = 0; j < 2; j++) {
+            if (reservation.serviceNames[action].equals(hotel.services[j].name)) {
+                System.out.println("ادخل عدد الاشخاص " + hotel.services[j].name);
+                reservation.numberOfPersons[action] = scanner.nextInt();
+                System.out.println("ادخل كم تريد البقاء");
+                reservation.servicePrices[action] = hotel.services[j].price;
+                reservation.quantities[action] = scanner.nextInt();
+                reservation.servicePrices[action] *= reservation.quantities[action];
+                if (reservation.numberOfPersons[action] > 0 && reservation.numberOfPersons[action] <= hotel.numberOfPersons) {
+                    System.out.println("هل تريد اضافة " + hotel.services[j].name + "? نعم ادخل رقم واحد لا ادخل رقم اثنان");
+                    input = scanner.nextInt();
+                    clearScreen();
+                    if (input == 1) {
+                        reservation.serviceNames[action + 1] = reservation.serviceNames[action];
+                        reservation.currentServiceIndex = ++action;
+                        j = 2;
+                        return reserveRoomOrSuite(reservation, cities, action, city, hotel);
+                    } else {
+                        j = 2;
+                        reservation.currentServiceIndex++;
+                    }
+                } else if (reservation.numberOfPersons[action] > hotel.numberOfPersons) {
+                    System.out.println("الحد الاقصى لعدد الاشخاص هو " + hotel.numberOfPersons);
+                    System.out.println("هل تريد اضافة غرفة لبقية الاشخاص؟ نعم ادخل رقم واحد لا ادخل رقم اثنان");
+                    input = scanner.nextInt();
+                    clearScreen();
+                    reservation.numberOfPersons[action] = hotel.numberOfPersons;
+                    if (input == 1) {
+                        reservation.serviceNames[action + 1] = reservation.serviceNames[action];
+                        reservation.currentServiceIndex = ++action;
+                        j =2;
+                        return reserveRoomOrSuite(reservation, cities, action, city, hotel);
+                    } else {
+                        System.out.println("تم الحجز لعدد الأشخاص: " + reservation.numberOfPersons[action]);
+                        j = 2;
+                        reservation.currentServiceIndex++;
+                    }
+                }
+            } else if (j == 1) {
+                System.out.println("الادخال غير صحيح، أعد الادخال");
+                reservation.currentServiceIndex = --action;
+            }
+        }
+        return reservation;
+    }
+
+    public static Reservation reserveOtherService(Reservation reservation, City[] cities, int action, City city, Hotel hotel) {
+        for (int j = 2; j < hotel.numberOfServices; j++) {
+            if (reservation.serviceNames[action].equals(hotel.services[j].name)) {
+                System.out.println("عدد الاشخاص في " + reservation.serviceNames[action]);
+                reservation.numberOfPersons[action] = scanner.nextInt();
+                reservation.servicePrices[action] = hotel.services[j].price * reservation.numberOfPersons[action];
+                reservation.quantities[action] = 1;
+                System.out.println("تم الحجز لك مكان");
+                reservation.currentServiceIndex++;
+            } else if (j == hotel.numberOfServices - 1) {
+                System.out.println("الادخال غير صحيح، أعد الادخال");
+            }
+        }
+        return reservation;
+    }
+
+    public static Reservation cancelReservation(Reservation reservation, int totalServices) {
+        printReservation(reservation, totalServices);
+        System.out.println("ادخل اسم الخدمة التي تريد الغاءها (للخروج اكتب 'خروج')");
+        int i = 0;
+
+        while (i < totalServices) {
+            String serviceToCancel = scanner.next();
+            if (serviceToCancel.equals("خروج")) {
+                break;
+            }
+            for (int j = 0; j < totalServices; j++) {
+                if (serviceToCancel.equals(reservation.serviceNames[j])) {
+                    reservation.serviceNames[j] = "تم الإلغاء";
+                    reservation.servicePrices[j] = 0;
+                    System.out.println("تم الغاء خدمة " + serviceToCancel);
+                }
+            }
+            i++;
+        }
+
+        printReservation(reservation, totalServices);
+        return reservation;
+    }
+
+    public static void pay(Reservation reservation, int totalServices) {
+        int totalCost = printReservation(reservation, totalServices);
+        int remainingCost = totalCost;
+
+        System.out.println("السعر الاجمالي هو: " + totalCost);
+
+        for (int i = 0; i < 4; i++) {
+            System.out.println("ادخل السعر المدفوع:");
+            int payment = scanner.nextInt();
+            if (payment == remainingCost) {
+                System.out.println("تم الحجز بنجاح");
+                break;
+            } else if (payment < remainingCost) {
+                remainingCost -= payment;
+                System.out.println("المبلغ المتبقي عليك هو: " + remainingCost);
+            } else {
+                remainingCost = payment - totalCost;
+                System.out.println("المبلغ الزائد هو: " + remainingCost);
+                break;
+            }
+        }
+    }
+
+    public static int printReservation(Reservation reservation, int totalServices) {
+        int totalCost = 0;
+        System.out.println("الحجز في فندق: " + reservation.hotelName);
+        for (int i = 0; i < totalServices; i++) {
+            if (reservation.servicePrices[i] != 0) {
+                System.out.println("_________________");
+                System.out.println("اسم الخدمة: " + reservation.serviceNames[i]);
+                System.out.println("عدد الأشخاص: " + reservation.numberOfPersons[i]);
+                System.out.println("مدة أيام البقاء: " + reservation.quantities[i]);
+                System.out.println("مبلغ الحجز: " + reservation.servicePrices[i]);
+                totalCost += reservation.servicePrices[i];
+            }
+        }
+        return totalCost;
+    }
+
+    public static void clearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+}
+
+
+
+
+
+
